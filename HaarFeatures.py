@@ -180,7 +180,7 @@ def generate_all_features(feature_type, window_size):
     for height in range(min_height, window_size[0]+1):
         for width in range(min_width, window_size[1]+1):
             for x_pos in range(min_x_pos, window_size[0]):
-                for y_pos in range(min_x_pos, window_size[1]):
+                for y_pos in range(min_y_pos, window_size[1]):
                     if (feature_type.check_arguments(width, height) and x_pos + height <= window_size[0] and y_pos + width <= window_size[1]):
                         all_features.append(feature_type(x_pos, y_pos, width, height))
 
