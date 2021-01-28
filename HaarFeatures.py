@@ -45,8 +45,9 @@ class Feature2v2(Feature):
         self.structure = {"white": [((0, self.height), (self.width // 2 , self.width))],
                           "black": [((0, self.height), (0, self.width // 2))]}
 
-    def check_arguments():
-        return self.width % 2 == 0
+    @staticmethod
+    def check_arguments(width, height):
+        return width % 2 == 0
 
 
 class Feature2h(Feature):
@@ -59,6 +60,7 @@ class Feature2h(Feature):
         self.structure = {"white": [((0, self.height//2), (0, self.width))],
                           "black": [((self.height//2, self.height), (0, self.width))]}
 
+    @staticmethod
     def check_arguments(width, height):
         return height % 2 == 0
 
@@ -72,6 +74,7 @@ class Feature2h2(Feature):
         self.structure = {"white": [((self.height//2, self.height), (0, self.width))],
                           "black": [((0, self.height//2), (0, self.width))]}
 
+    @staticmethod
     def check_arguments(width, height):
         return height % 2 == 0
 
@@ -88,6 +91,7 @@ class Feature3h(Feature):
         self.structure = {"white": [((0, self.height//3), (0, self.width)), ((self.height//3 * 2, self.height), (0, self.width))],
                           "black": [((self.height//3 , self.height//3 * 2), (0, self.width))]}
 
+    @staticmethod
     def check_arguments(width, height):
         return height % 3 == 0
 
@@ -102,6 +106,7 @@ class Feature3h2(Feature):
         self.structure = {"white": [((self.height//3 , self.height//3 * 2), (0, self.width))],
                           "black": [((0, self.height//3), (0, self.width)), ((self.height//3 * 2, self.height), (0, self.width))]}
 
+    @staticmethod
     def check_arguments(width, height):
         return height % 3 == 0
 
@@ -116,6 +121,7 @@ class Feature3v(Feature):
         self.structure = {"white": [((0, self.height), (0, self.width//3)), ((0, self.height), (self.width//3 * 2, self.width))],
                           "black": [((0, self.height), (self.width // 3, self.width // 3 * 2))]}
 
+    @staticmethod
     def check_arguments(width, height):
         return width % 3 == 0
 
@@ -129,6 +135,7 @@ class Feature3v2(Feature):
         self.structure = {"white": [((0 , self.height), (self.width // 3, self.width // 3 * 2))],
                           "black": [((0, self.height), (0, self.width//3)), ((0, self.height), (self.width//3 * 2, self.width), )]}
 
+    @staticmethod
     def check_arguments(width, height):
         return width % 3 == 0
 
@@ -143,6 +150,7 @@ class Feature4(Feature):
         self.structure = {"white": [((0 , self.height // 2), (self.width // 2, self.width)), ((self.height // 2 , self.height), (0, self.width // 2))],
                           "black": [((0, self.height//2), (0, self.width//2)), ((self.height // 2, self.height), (self.width//2, self.width))]}
 
+    @staticmethod
     def check_arguments(width, height):
         return width % 2 == 0 and height % 2 == 0
 
@@ -157,6 +165,7 @@ class Feature42(Feature):
         self.structure = {"white": [((0, self.height//2), (0, self.width//2)), ((self.height // 2, self.height), (self.width//2, self.width))],
                           "black": [((0 , self.height // 2), (self.width // 2, self.width)), ((self.height // 2 , self.height), (0, self.width // 2))]}
 
+    @staticmethod
     def check_arguments(width, height):
         return width % 2 == 0 and height % 2 == 0
 
