@@ -32,8 +32,9 @@ class Feature2v(Feature):
         self.structure = {"white": [((0, self.height), (0, self.width // 2))],
                           "black": [((0, self.height), (self.width // 2 , self.width))]}
 
-    def check_arguments():
-        return self.width % 2 == 0
+    @staticmethod
+    def check_arguments(width, height):
+        return width % 2 == 0
 
 class Feature2v2(Feature):
     def __init__(self, x_pos, y_pos, width, height, weight=None): 
