@@ -7,27 +7,38 @@ import time
 
 class IntegralImage:
 
+    WINDOW_SIZE = (24, 24)
+
     @staticmethod
-    def convert_image_to_numpy_array(image_path):
-        image = Image.open(image_path)
+    def convert_image_to_numpy_array(image):
         data = np.asarray(image)
         return data
 
     @staticmethod
-    def covert_image_to_grayscale(coeff=2.2):
+    def open_image(img_path):
+        return Image.open(img_path)
+
+    @staticmethod
+    def resize_image(img: Image.Image):
+        resized = img.resize(IntegralImage.WINDOW_SIZE, Image.ANTIALIAS)
+        return resized
+
+    @staticmethod
+    def covert_image_to_grayscale(image, coeff=2.2):
         """
 
         :return: an array with the same shape but of the gray image
 
         """
         # create an array of values between 0-1
-        origin = np.array(i.image).astype(np.float32) / 255
-        print(type(origin))
+        origin = np.array(image).astype(np.float32) / 255
+        # print(type(origin))
         # conversion of the algorithm
         num = origin ** (1. / coeff)
-        print("origin.shape[2]: ", origin.shape)
+        # print("origin.shape[2]: ", origin.shape)
         # makes an average for the three numbers
-        return np.sum(num, axis=2) / origin.shape[2]
+        arr = np.sum(num, axis=2) / origin.shape[2]
+        return Image.fromarray(arr)
 
     @staticmethod
     def show_grayscale_image(grayscale):
@@ -46,7 +57,7 @@ class IntegralImage:
     @staticmethod
     def get_area_value(integral_image, top_left, width, height):
 
-        print("integarl:", top_left)
+        # print("integarl:", top_left)
 
         width -= 1
         height -= 1
@@ -55,7 +66,8 @@ class IntegralImage:
         bl = integral_image[top_left[0]+height, top_left[1]-1] if top_left[0]+height < integral_image.shape[0] and top_left[1] >= 1 else 0
         br = integral_image[top_left[0]+height, top_left[1]+width]
 
-        print("tl:", tl, "tr:", tr, "bl:", bl, "br:", br)
+        # print("tl:", tl, "tr:", tr, "bl:", bl, "br:", br)
+        print("num", tl + br - tr - bl)
         return tl + br - tr - bl
 
 

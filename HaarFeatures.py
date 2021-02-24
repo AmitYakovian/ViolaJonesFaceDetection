@@ -1,6 +1,7 @@
 import numpy as np
 import ImageCalculation
 
+WINDOW_SIZE = ImageCalculation.IntegralImage.WINDOW_SIZE
 
 class Feature:
     def __init__(self, x_pos, y_pos, width, height, weight=None):
@@ -12,13 +13,11 @@ class Feature:
 
     def get_prediction(self, integral_image: np.ndarray):
 
-        print(integral_image)
-        print(self.structure)
 
         white_sum = sum([ImageCalculation.IntegralImage.get_area_value(integral_image, (area[0][0]+self.x_pos, area[1][0]+self.y_pos), self.rect_width, self.rect_height) for area in self.structure["white"]])
         black_sum = sum([ImageCalculation.IntegralImage.get_area_value(integral_image, (area[0][0]+self.x_pos, area[1][0]+self.y_pos), self.rect_width, self.rect_height) for area in self.structure["black"]])
 
-        print(white_sum, black_sum)
+        print("prediction", white_sum - black_sum)
         return white_sum - black_sum
 
 
@@ -187,6 +186,21 @@ def generate_all_features(feature_type, window_size):
     return all_features
 
 
+def all_features():
+    all = []
+    all += generate_all_features(Feature2h, WINDOW_SIZE)
+    all += generate_all_features(Feature2h2, WINDOW_SIZE)
+    all += generate_all_features(Feature2v, WINDOW_SIZE)
+    all += generate_all_features(Feature2v2, WINDOW_SIZE)
+    all += generate_all_features(Feature3h, WINDOW_SIZE)
+    all += generate_all_features(Feature3h2, WINDOW_SIZE)
+    all += generate_all_features(Feature3v, WINDOW_SIZE)
+    all += generate_all_features(Feature3v2, WINDOW_SIZE)
+    all += generate_all_features(Feature4, WINDOW_SIZE)
+    all += generate_all_features(Feature42, WINDOW_SIZE)
+
+    return all
+
 
 
 
@@ -198,7 +212,6 @@ def main():
     # # print(ImageCalculation.IntegralImage.get_integral_image(a))
     # print(f.get_prediction(ImageCalculation.IntegralImage.get_integral_image(a)))
     # print(Feature3h.check_arguments(2,2))
-
     print(len(generate_all_features(Feature2h, (20, 20))))
     Feature2h2.hi()
 

@@ -1,0 +1,4 @@
+*.dill
+__pycache__
+dataset.*
+dataset
