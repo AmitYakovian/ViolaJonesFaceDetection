@@ -3,6 +3,7 @@ from PIL import Image
 import sys
 import matplotlib.pyplot as plt
 import time
+from numba import njit
 
 
 class IntegralImage:
@@ -55,6 +56,7 @@ class IntegralImage:
         return integral_image
 
     @staticmethod
+    @njit
     def get_area_value(integral_image, top_left, width, height):
 
         # print("integarl:", top_left)
@@ -67,7 +69,7 @@ class IntegralImage:
         br = integral_image[top_left[0]+height, top_left[1]+width]
 
         # print("tl:", tl, "tr:", tr, "bl:", bl, "br:", br)
-        print("num", tl + br - tr - bl)
+        # print("num", tl + br - tr - bl)
         return tl + br - tr - bl
 
 

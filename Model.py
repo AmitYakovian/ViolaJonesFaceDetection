@@ -6,6 +6,8 @@ from collections import namedtuple
 from sklearn.utils import shuffle
 import HaarFeatures
 from ImageCalculation import IntegralImage
+from numba import jit, cuda, vectorize, njit
+from tqdm import tqdm
 
 # from HaarFeatures import Feature2v, Feature2v2, Feature2h, Feature2h2, Feature3h, Feature3h2, Feature3v, Feature3v2, \
 #      Feature4, Feature42
@@ -43,7 +45,7 @@ class Model:
         return images_weights / images_weights.sum()
 
     @staticmethod
-    def build_weak_classifiers(num_features: int, integral_images, labels: list, features):
+    def build_weak_classifiers(num_features: int, integral_images, labels: np.array, features):
 
         global ClassifierResult, WeakClassifier
 
@@ -51,7 +53,8 @@ class Model:
         positive = len([label for label in labels if float(label) > .5])  # number of positive examples
 
         # Initialize the weights
-        images_weights = np.zeros_like(labels)
+        images_weights = np.full(labels.shape, 1 / len(labels))
+        print()
         index = 0
         for label in labels:
             if float(label) < .5:
@@ -62,13 +65,14 @@ class Model:
 
         labels = np.array(labels)
         weak_classifiers = []  # type: #list[WeakClassifier]
-        for t in range(num_features):
+        for t in tqdm(range(num_features)):
+            print("\n\niterating")
             # Normalize the weights
             images_weights = Model.normalize_weights(images_weights)
 
             # Select best weak classifier for this round
             best = ClassifierResult(polarity=0, threshold=0, error=float('inf'), classifier=None)
-            for f in features:
+            for f in tqdm(features):
                 result = Model.apply_feature(f, integral_images, labels, images_weights)
                 if result.error < best.error:
                     best = result
@@ -99,15 +103,27 @@ class Model:
         models = {}
         for i in range(1, models_num + 1):
             models[i] = Model.build_weak_classifiers(feature_num_for_model[i - 1], integral_images, labels,
-                                                              features)
+                                                     features)
         return models
+
+    @staticmethod
+    @njit
+    def weak_classifier_jit(feature_prediction, integral_image, threshold, polarity):
+        # return 1 if threshold * polarity > feature(image) * polarity, else 0
+        return (np.sign(threshold * polarity - feature_prediction * polarity) + 1) // 2
 
     @staticmethod
     def weak_classifier(feature, integral_image, threshold, polarity):
         # return 1 if threshold * polarity > feature(image) * polarity, else 0
-        return (np.sign(threshold * polarity - feature.get_prediction(integral_image) * polarity) + 1) // 2
+        return Model.weak_classifier_jit(feature.get_prediction(integral_image), integral_image, threshold, polarity)
+
+    # @staticmethod
+    # def weak_classifier(feature, integral_image, threshold, polarity):
+    #     # return 1 if threshold * polarity > feature(image) * polarity, else 0
+    #     return (np.sign(threshold * polarity - feature.get_prediction(integral_image) * polarity) + 1) // 2
 
     @staticmethod
+    @njit
     def calculate_sums_for_threshold(labels: list, weights: list):
         """
 
@@ -121,8 +137,9 @@ class Model:
         """
 
         t_plus, t_minus = .0, .0
-        s_pluses, s_minuses = [], []
+        s_pluses, s_minuses = np.zeros_like(weights), np.zeros_like(labels)
         s_minus, s_plus = .0, .0
+        i = 0
 
         for label, weight in zip(labels, weights):
             if label < 1:
@@ -131,14 +148,16 @@ class Model:
             else:
                 s_plus += weight
                 t_plus += weight
-            s_minuses.append(s_minus)
-            s_pluses.append(s_plus)
+            s_minuses[i] = s_minus
+            s_pluses[i] = s_plus
+            i += 1
 
         return t_minus, t_plus, s_minuses, s_pluses
 
     @staticmethod
+    @njit
     def determine_threshold(feature_results, t_minus, t_plus, s_minuses, s_pluses):
-        error = float('inf')
+        error = 10000.0
         picked_threshold, polarity = 0, 0
 
         for feature_result, s_minus, s_plus in zip(feature_results, s_minuses, s_pluses):
@@ -182,8 +201,8 @@ class Model:
 
         return ClassifierResult(error=error_sum, threshold=threshold, polarity=polarity, classifier=feature)
 
-
-    def save_model(self):
+    @staticmethod
+    def save_model(model):
         with open(r"model.dill", 'wb') as f:
             dill.dump(model, f)
 
@@ -228,7 +247,7 @@ def prepare_dataset(faces, backgrounds):
 
     xs, ys = shuffle(xs, ys)
 
-    return xs, ys
+    return np.asarray(xs), np.asarray(ys)
 
 
 def main():
@@ -239,8 +258,9 @@ def main():
     # xs = dill.load(open(r"xs1.dill", 'rb'))
     #
     # ys = dill.load(open(r"ys1.dill", 'rb'))
-
+    print(xs.dtype)
     features = HaarFeatures.all_features()
+    print("got all features")
     strong_classifier = Model.model_layers(6, [2, 10, 25, 50, 50, 50], xs, ys, features)
 
 
@@ -250,10 +270,10 @@ def main1():
     xs, ys = prepare_dataset(faces, backgrounds)
 
     with open(r"xs1.dill", 'wb') as f:
-            dill.dump(xs, f)
+        dill.dump(xs, f)
 
     with open(r"ys1.dill", 'wb') as f:
-            dill.dump(ys, f)
+        dill.dump(ys, f)
 
 
 def main2():
@@ -263,6 +283,7 @@ def main2():
 
     print(ys)
     print(len(xs))
+
 
 if __name__ == '__main__':
     main()
