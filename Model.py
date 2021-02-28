@@ -202,8 +202,8 @@ class Model:
         return ClassifierResult(error=error_sum, threshold=threshold, polarity=polarity, classifier=feature)
 
     @staticmethod
-    def save_model(model):
-        with open(r"model.dill", 'wb') as f:
+    def save_model(model, path=r"model.dill"):
+        with open(path, 'wb') as f:
             dill.dump(model, f)
 
 
@@ -247,13 +247,19 @@ def prepare_dataset(faces, backgrounds):
 
     xs, ys = shuffle(xs, ys)
 
-    return np.asarray(xs), np.asarray(ys)
+    test_images = []
+    test_labels = []
+    for i in range(len(random_images) // 5):
+        test_images.append(random_images.pop())
+        test_labels.append(random_labels.pop())
+
+    return np.asarray(xs), np.asarray(ys), np.asarray(test_images), np.asarray(test_labels)
 
 
 def main():
     faces, backgrounds = load_dataset(r"C:\Users\HP\Desktop\final_project\dataset\face_images\*.png",
                                       r"C:\Users\HP\Desktop\final_project\dataset\background_images\*.jpg")
-    xs, ys = prepare_dataset(faces, backgrounds)
+    xs, ys, test_x, test_y = prepare_dataset(faces, backgrounds)
 
     # xs = dill.load(open(r"xs1.dill", 'rb'))
     #
@@ -262,6 +268,10 @@ def main():
     features = HaarFeatures.all_features()
     print("got all features")
     strong_classifier = Model.model_layers(6, [2, 10, 25, 50, 50, 50], xs, ys, features)
+
+    Model.save_model(strong_classifier)
+    Model.save_model(test_x, path="test_x.dill")
+    Model.save_model(test_y, path="test_x.dill")
 
 
 def main1():
