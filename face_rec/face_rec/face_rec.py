@@ -92,10 +92,11 @@ def classify_face(im):
     while True:
 
         cv2.imshow('Video', img)
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             return face_names 
 
 
-print(classify_face("aaa.jpg"))
+print(classify_face("evil-booki.jpg"))
 
 

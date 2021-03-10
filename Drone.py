@@ -1,5 +1,5 @@
 import socket
-
+import threading
 
 # https://stackoverflow.com/questions/56951741/how-to-collect-video-data-from-a-dji-tello-drone-and-a-udp-server-in-python
 
@@ -15,6 +15,8 @@ class Drone:
 
         self.command_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.video_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        self.lock = threading.Lock()
 
         # initialize video streaming
 

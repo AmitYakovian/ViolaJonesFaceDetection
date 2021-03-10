@@ -3,7 +3,7 @@ import numpy as np
 import glob
 import random
 from collections import namedtuple
-from sklearn.utils import shuffle
+# from sklearn.utils import shuffle
 import HaarFeatures
 from ImageCalculation import IntegralImage
 from numba import jit, cuda, vectorize, njit
@@ -65,7 +65,7 @@ class Model:
 
         labels = np.array(labels)
         weak_classifiers = []  # type: #list[WeakClassifier]
-        for t in tqdm(range(num_features)):
+        for t in range(num_features):
             print("\n\niterating")
             # Normalize the weights
             images_weights = Model.normalize_weights(images_weights)
@@ -76,10 +76,14 @@ class Model:
                 result = Model.apply_feature(f, integral_images, labels, images_weights)
                 if result.error < best.error:
                     best = result
+                    print("better:", best.error)
 
-            # After the best classifier was found
+            # Generate WeakClassifier NamedTuple, print statistics and save
+
             beta = best.error / (1 - best.error)
             alpha = np.log(1. / beta)
+
+            print("beta:", beta, "alpha:", alpha, "error:", best.error)
 
             # Build the weak classifier
             classifier = WeakClassifier(threshold=best.threshold, polarity=best.polarity,
@@ -124,7 +128,7 @@ class Model:
 
     @staticmethod
     @njit
-    def calculate_sums_for_threshold(labels: list, weights: list):
+    def calculate_sums_for_threshold(labels, weights):
         """
 
         :param labels: list
@@ -194,7 +198,7 @@ class Model:
         feature_results = np.array([feature.get_prediction(im) for im in integral_images])
         threshold, polarity = Model.get_threshold_and_polarity(feature_results, labels, image_weights)
 
-        error_sum = 0
+        error_sum = 0.
         for weight, integral_image, label in zip(image_weights, integral_images, labels):
             result = Model.weak_classifier(feature, integral_image, threshold, polarity)
             error_sum += weight * np.abs(label - result)
@@ -202,8 +206,13 @@ class Model:
         return ClassifierResult(error=error_sum, threshold=threshold, polarity=polarity, classifier=feature)
 
     @staticmethod
-    def save_model(model, path=r"model.dill"):
-        with open(path, 'wb') as f:
+    def get_success_rate():
+        pass
+
+
+    @staticmethod
+    def save_model(model, filename=r"model.dill"):
+        with open(filename, 'wb') as f:
             dill.dump(model, f)
 
 
@@ -245,33 +254,50 @@ def prepare_dataset(faces, backgrounds):
         xs.append(integral_image)
         ys.append(0)
 
-    xs, ys = shuffle(xs, ys)
+    # xs, ys = shuffle(xs, ys)
+    # shuffle with dependency
 
-    test_images = []
-    test_labels = []
-    for i in range(len(random_images) // 5):
-        test_images.append(random_images.pop())
-        test_labels.append(random_labels.pop())
+    temp = list(zip(xs, ys))
+    random.shuffle(temp)
+    xs, ys = zip(*temp)
 
-    return np.asarray(xs), np.asarray(ys), np.asarray(test_images), np.asarray(test_labels)
+    xs = list(xs)
+    ys = list(ys)
+
+    # get test data
+    amount = len(xs) // 5  # 20% of data
+    x_test = []
+    y_test = []
+
+    for _ in range(amount):
+        x_test.append(xs.pop())
+        y_test.append(ys.pop())
+
+    print(f"lengths: ({len(xs)}, {len(ys)})   ({len(x_test)}, {len(y_test)})")
+
+    return np.asarray(xs), np.asarray(ys), np.asarray(x_test), np.asarray(y_test)
 
 
 def main():
     faces, backgrounds = load_dataset(r"C:\Users\HP\Desktop\final_project\dataset\face_images\*.png",
                                       r"C:\Users\HP\Desktop\final_project\dataset\background_images\*.jpg")
-    xs, ys, test_x, test_y = prepare_dataset(faces, backgrounds)
+    xs, ys, x_test, y_test = prepare_dataset(faces, backgrounds)
 
     # xs = dill.load(open(r"xs1.dill", 'rb'))
     #
     # ys = dill.load(open(r"ys1.dill", 'rb'))
     print(xs.dtype)
+
+    # print(xs[0])
+    # exit()
+
     features = HaarFeatures.all_features()
     print("got all features")
     strong_classifier = Model.model_layers(6, [2, 10, 25, 50, 50, 50], xs, ys, features)
 
     Model.save_model(strong_classifier)
-    Model.save_model(test_x, path="test_x.dill")
-    Model.save_model(test_y, path="test_x.dill")
+    Model.save_model(x_test, filename=r"test_x.dill")
+    Model.save_model(y_test, filename=r"test_y.dill")
 
 
 def main1():

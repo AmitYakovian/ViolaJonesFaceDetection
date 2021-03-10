@@ -12,7 +12,7 @@ class IntegralImage:
 
     @staticmethod
     def convert_image_to_numpy_array(image):
-        data = np.asarray(image)
+        data = np.array(image) / 255
         return data
 
     @staticmethod
@@ -32,7 +32,7 @@ class IntegralImage:
 
         """
         # create an array of values between 0-1
-        origin = np.array(image).astype(np.float32) / 255
+        origin = np.array(image).astype(np.float32)
         # print(type(origin))
         # conversion of the algorithm
         num = origin ** (1. / coeff)
@@ -47,13 +47,20 @@ class IntegralImage:
         plt.waitforbuttonpress()
 
     @staticmethod
-    def get_integral_image(image_array: np.ndarray):
+    @njit
+    def get_integral_image2(image_array: np.ndarray):
         integral_image = np.copy(image_array)
         for i in range(image_array.shape[0]):
             for j in range(image_array.shape[1]):
                 integral_image[i][j] += (image_array[i, 0:j].sum() if j > 0 else 0) + (integral_image[i-1][j] if i > 0 else 0)
 
         return integral_image
+
+    @staticmethod
+    def get_integral_image(img: np.ndarray) -> np.ndarray:
+        integral = np.cumsum(np.cumsum(img, axis=0), axis=1)
+        # return np.pad(integral, (1, 1), 'constant', constant_values=(0, 0))[:-1, :-1]
+        return integral
 
     @staticmethod
     @njit
